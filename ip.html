@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My IP Address</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .ip-display {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #495057;
+            word-break: break-all;
+        }
+        .loading {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            border-radius: 5px;
+        }
+        .copy-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+            transition: transform 0.2s;
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+        }
+        .copy-btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 My IP Address</h1>
+        <div id="ipDisplay" class="ip-display loading">
+            Loading your IP address...
+        </div>
+        <button id="copyBtn" class="copy-btn" onclick="copyIP()" style="display: none;">
+            📋 Copy IP Address
+        </button>
+        <div class="info">
+            <strong>ℹ️ About your IP:</strong><br>
+            This shows your public IP address as seen by websites and services on the internet. Your local/private IP address (like 192.168.x.x) may be different.
+        </div>
+    </div>
+
+    <script>
+        let currentIP = '';
+
+        async function getIP() {
+            try {
+                // Try multiple services in case one is down
+                const services = [
+                    'https://api.ipify.org?format=json',
+                    'https://ipapi.co/json/',
+                    'https://httpbin.org/ip'
+                ];
+
+                for (let service of services) {
+                    try {
+                        const response = await fetch(service);
+                        const data = await response.json();
+                        
+                        // Different services return IP in different formats
+                        let ip = data.ip || data.origin || data.query;
+                        
+                        if (ip) {
+                            currentIP = ip;
+                            document.getElementById('ipDisplay').textContent = ip;
+                            document.getElementById('ipDisplay').classList.remove('loading');
+                            document.getElementById('copyBtn').style.display = 'inline-block';
+                            return;
+                        }
+                    } catch (e) {
+                        continue; // Try next service
+                    }
+                }
+                
+                throw new Error('All services failed');
+                
+            } catch (error) {
+                document.getElementById('ipDisplay').textContent = 'Unable to fetch IP address';
+                document.getElementById('ipDisplay').classList.remove('loading');
+            }
+        }
+
+        function copyIP() {
+            if (currentIP) {
+                navigator.clipboard.writeText(currentIP).then(() => {
+                    const btn = document.getElementById('copyBtn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = currentIP;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    const btn = document.getElementById('copyBtn');
+                    const originalText = btn.textContent;
+                    btn.textContent = '✅ Copied!';
+                    setTimeout(() => {
+                        btn.textContent = originalText;
+                    }, 2000);
+                });
+            }
+        }
+
+        // Get IP when page loads
+        getIP();
+    </script>
+</body>
+</html>
